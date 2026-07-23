@@ -525,22 +525,34 @@
       motivo: tipoSelecionado === 'Assessoria' ? document.getElementById('motivoAssessoria').value : ''
     };
 
+    let protocolo = null;
+
     try{
-      await fetch(WEB_APP_URL, {
+      const resposta = await fetch(WEB_APP_URL, {
         method: 'POST',
-        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload)
       });
+      const resultado = await resposta.json();
+      if(resultado && resultado.status === 'ok' && resultado.os){
+        protocolo = resultado.os;
+      } else {
+        console.error('Resposta inesperada do servidor:', resultado);
+      }
     } catch(e){
       console.error('Erro ao enviar:', e);
     }
 
-    const protocolo = 'OS-' + Date.now().toString().slice(-6);
-    document.getElementById('osTag').innerText = 'Protocolo: ' + protocolo;
+    if(!protocolo){
+      // Não foi possível confirmar o protocolo real — avisa em vez de inventar um número
+      document.getElementById('osTag').innerText = 'Enviado — protocolo será confirmado por WhatsApp';
+    } else {
+      document.getElementById('osTag').innerText = 'Protocolo: ' + protocolo;
+    }
 
     const waMsg = encodeURIComponent(
-      `Olá! Acabei de solicitar um atendimento (${tipoSelecionado}) pela loja ${payload.loja}. Protocolo ${protocolo}.`
+      `Olá! Acabei de solicitar um atendimento (${tipoSelecionado}) pela loja ${payload.loja}.` +
+      (protocolo ? ` Protocolo ${protocolo}.` : '')
     );
     document.getElementById('waLink').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMsg}`;
 
