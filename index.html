@@ -170,15 +170,6 @@
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   @media (max-width:420px){ .row2{ grid-template-columns:1fr; } }
 
-  .file-drop{
-    border: 1.5px dashed var(--line); border-radius:10px; padding:16px;
-    text-align:center; font-size:12px; color: var(--muted); cursor:pointer;
-    transition: border-color .2s ease;
-  }
-  .file-drop:hover{ border-color: var(--blue); }
-  .file-drop input{ display:none; }
-  .file-name{ margin-top:8px; font-size:12px; color: var(--gold); }
-
   .check-row{ display:flex; align-items:flex-start; gap:10px; margin-top:6px; }
   .check-row input{ width:auto; margin-top:3px; accent-color: var(--blue); }
   .check-row span{ font-size:12.5px; color: var(--muted); line-height:1.5; }
@@ -316,13 +307,8 @@
           <label>Peça ou equipamento envolvido (se souber)</label>
           <input type="text" id="pecaEnvolvida" placeholder="Ex: fonte, memória, impressora fiscal">
         </div>
-        <div class="field">
-          <label>Foto do problema (opcional)</label>
-          <div class="file-drop" onclick="document.getElementById('fotoInput').click()">
-            <input type="file" id="fotoInput" accept="image/*" onchange="handleFile(this)">
-            📎 Toque para anexar uma foto
-            <div class="file-name" id="fileName"></div>
-          </div>
+        <div class="window-note" style="margin-top:0; margin-bottom:16px;">
+          📸 Se possível, envie uma foto do problema pelo WhatsApp durante a conversa de confirmação — isso ajuda o técnico a se preparar antes da visita.
         </div>
         <div class="check-row">
           <input type="checkbox" id="cienteJanela">
@@ -407,12 +393,10 @@
      ======================================================= */
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHvI-6YevzUyJxI9EoiUAM9bIUA3kKZxFETh7KIf-_MazqI5buDCkothez6azawqal/exec";
   const WHATSAPP_NUMBER = "5547999990000"; // número da central técnica, com DDI+DDD
-  const MAX_PHOTO_MB = 3;
 
   /* ------------------------------------------------------- */
 
   let tipoSelecionado = null;
-  let fotoBase64 = null;
 
   // Pré-preenche loja via query string: ?loja=ID123&nome=Cafeteria%20Aroma
   const params = new URLSearchParams(window.location.search);
@@ -458,22 +442,6 @@
     document.getElementById('trace-2').classList.toggle('filled', n > 2);
 
     window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  function handleFile(input){
-    const file = input.files[0];
-    if(!file) return;
-    if(file.size > MAX_PHOTO_MB * 1024 * 1024){
-      alert('A foto deve ter até ' + MAX_PHOTO_MB + 'MB.');
-      input.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = function(e){
-      fotoBase64 = e.target.result;
-      document.getElementById('fileName').innerText = '✔ ' + file.name;
-    };
-    reader.readAsDataURL(file);
   }
 
   function validateStep2(){
@@ -523,7 +491,6 @@
     if(tipoSelecionado === 'Emergência'){
       rows.push(['Problema', document.getElementById('descricaoEmergencia').value]);
       rows.push(['Peça envolvida', document.getElementById('pecaEnvolvida').value || '—']);
-      rows.push(['Foto anexada', fotoBase64 ? 'Sim' : 'Não']);
       rows.push(['Janela', '13h às 20h (a combinar)']);
     } else {
       rows.push(['Motivo', document.getElementById('motivoAssessoria').value]);
@@ -555,8 +522,7 @@
       pecaEnvolvida: document.getElementById('pecaEnvolvida').value,
       dataAgendada: tipoSelecionado === 'Assessoria' ? document.getElementById('dataAssessoria').value : '',
       turno: tipoSelecionado === 'Assessoria' ? document.getElementById('turnoAssessoria').value : '',
-      motivo: tipoSelecionado === 'Assessoria' ? document.getElementById('motivoAssessoria').value : '',
-      fotoBase64: fotoBase64 || ''
+      motivo: tipoSelecionado === 'Assessoria' ? document.getElementById('motivoAssessoria').value : ''
     };
 
     try{
